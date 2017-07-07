@@ -12,5 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-IP_ADDRESS = '<YOUR-IP-ADDRESS>'
-PORT = 8000 
+# See README for how to get your iPhone's IP address
+IP_ADDRESS = '<YOUR-PHONES-IP>'
+PORT = 8000
