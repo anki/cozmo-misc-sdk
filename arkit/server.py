@@ -91,17 +91,11 @@ class TapCube(threading.Thread):
         global serverT
         serverT = threading.Timer(0, self.run_server).start()
         await self._robot.set_lift_height(0, duration=0.5).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_launch_wakeup_02"
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.ConnectWakeUp
         ).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_hiking_lookaround_01"
-        ).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_hiking_lookaround_03"
-        ).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_hiking_lookaround_02"
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.HikingLookAround
         ).wait_for_completed()
         await self._robot.set_head_angle(
             cozmo.util.degrees(0)
@@ -142,11 +136,9 @@ class TapCube(threading.Thread):
             print("Didn't find a cube :-(")
             return False
         if self._round < 2:
-            tap_anim = random.choice([
-                "anim_pyramid_reacttocube_happy_high_01",
-                "anim_speedtap_winround_intensity02_02"
-            ])
-            await self._robot.play_anim(tap_anim).wait_for_completed()
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.OnboardingDiscoverCube
+            ).wait_for_completed()
         if self._round > 2:
             return
         self._cube.start_light_chaser(GREEN)
@@ -171,18 +163,15 @@ class TapCube(threading.Thread):
         if not self._wait_for_tap_flag:
             return
         threading.Timer(0.5, self.trigger_cozmo_tap).start()
-        tap_anim = random.choice([
-            "anim_speedtap_tap_01",
-            "anim_speedtap_tap_02",
-            "anim_speedtap_tap_03"
-        ])
-        await self._robot.play_anim(tap_anim).wait_for_completed()
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.OnSpeedtapTap
+        ).wait_for_completed()
         await self.see_fireworks(cube)
 
     async def see_fireworks(self, cube):
         if self._round != 2:
             await self._robot.drive_straight(
-                distance_mm(-50), speed_mmps(80)
+                distance_mm(-80), speed_mmps(100)
             ).wait_for_completed()
             await self._robot.set_lift_height(
                 0, duration=0.3
@@ -196,8 +185,8 @@ class TapCube(threading.Thread):
             print("Cube tap not detected.\
                 Either Cozmo missed or cube has no power.")
             self._trigger_message = False
-            await self._robot.play_anim(
-                "anim_keepaway_losehand_01"
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.CubePounceLoseHand
             ).wait_for_completed()
 
         # Cozmo taps cube and looks at fireworks
@@ -210,8 +199,8 @@ class TapCube(threading.Thread):
                     cozmo.util.Angle(degrees=44.5), 1, 1, 1
                 ).wait_for_completed()
                 await asyncio.sleep(1)
-                await self._robot.play_anim(
-                    "anim_reacttoblock_react_01_head_angle_40"
+                await self._robot.play_anim_trigger(
+                    cozmo.anim.Triggers.ReactToNewBlockBig
                 ).wait_for_completed()
                 await self._robot.drive_straight(
                     distance_mm(-30), speed_mmps(30)
@@ -221,6 +210,9 @@ class TapCube(threading.Thread):
 
             # Dud
             if self._round == 1:
+                await self._robot.play_anim_trigger(
+                    cozmo.anim.Triggers.DroneModeCliffEvent
+                ).wait_for_completed()
                 await self._robot.play_anim(
                     "anim_reacttocliff_turtlerollfail_03"
                 ).wait_for_completed()
@@ -229,8 +221,8 @@ class TapCube(threading.Thread):
         # Grand finale
         if self._animation_triggered and self._round == 2:
             await asyncio.sleep(0.5)
-            await self._robot.play_anim(
-                "anim_memorymatch_failhand_03"
+            await self._robot.drive_straight(
+                distance_mm(-10), speed_mmps(100)
             ).wait_for_completed()
             await asyncio.sleep(0.5)
             await self._robot.play_anim(
@@ -240,16 +232,21 @@ class TapCube(threading.Thread):
                 self.send_msg(4)
             if self._animation_triggered:
                 self.send_msg(3)
-            await self._robot.play_anim(
-                "anim_reacttoblock_react_01_head_angle_40"
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.ReactToNewBlockBig
             ).wait_for_completed()
-            await self._robot.play_anim(
-                "reacttoblock_reacttotopple_01"
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.CubePounceWinHand
             ).wait_for_completed()
-            await self._robot.play_anim(
-                "anim_reacttocliff_wheely_01"
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.CodeLabHappy
             ).wait_for_completed()
-
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.DemoSpeedTapCozmoWin
+            ).wait_for_completed()
+            await self._robot.play_anim_trigger(
+                cozmo.anim.Triggers.CodeLabHappy
+            ).wait_for_completed()
             self._tap_action_finished = True
             await self.go_back_to_normal()
             self._animation_triggered = False
@@ -258,14 +255,14 @@ class TapCube(threading.Thread):
     async def go_back_to_normal(self):
         self._cube.stop_light_chaser()
         self._cube.set_lights_off()
-        await self._robot.play_anim(
-            "anim_guarddog_getout_untouched_01"
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.PeekABooGetOutHappy
         ).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_guarddog_getout_timeout_01"
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.GuardDogTimeout
         ).wait_for_completed()
-        await self._robot.play_anim(
-            "anim_gotosleep_getin_01"
+        await self._robot.play_anim_trigger(
+            cozmo.anim.Triggers.StartSleeping
         ).wait_for_completed()
 
     def trigger_cozmo_tap(self):
